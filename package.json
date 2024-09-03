@@ -1,12 +1,20 @@
 {
   "name": "sheets-contabilidad",
   "version": "0.0.0",
+  "bin": {
+    "start-sheets": "index.js"
+  },
   "description": "CLI para manejar hojas de cálculo de contabilidad",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "link-cli": "pnpm unlink -g sheets-contabilidad && pnpm link -g",
+     "dev": "tsc -w"
   },
   "keywords": [],
   "author": "Jorge Domínguez",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.5.2",
+    "typescript": "^5.5.4"
+  }
 }
