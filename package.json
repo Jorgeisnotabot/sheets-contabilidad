@@ -1,0 +1,12 @@
+{
+  "name": "sheets-contabilidad",
+  "version": "0.0.0",
+  "description": "CLI para manejar hojas de cálculo de contabilidad",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Jorge Domínguez",
+  "license": "ISC"
+}
