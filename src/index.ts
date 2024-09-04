@@ -3,11 +3,37 @@
 import { Command } from 'commander';
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
-import { CLIENT_EMAIL, PRIVATE_KEY, DEFAULT_EMAIL, FOLDER_ID, TEMPLATE_ID, SHEETS_NAME } from './config';
+import { CLIENT_EMAIL, PRIVATE_KEY, DEFAULT_EMAIL, FOLDER_ID, SHEETS_NAME, SHEETS_ID } from './config';
+import GoogleSheets from './lib/google-sheets';
 
 const program = new Command();
 
-
+    program
+    .command('add-income')
+    .description('Add income to Google Sheet')
+    .option('-d, --date <date>', 'The date of the income')
+    .option('-c, --customer <customer>', 'The customer name')
+    .option('-o, --concept <concept>', 'The concept of the income')
+    .option('-i, --invoice <invoice>', 'The invoice number')
+    .option('-a, --amount <amount>', 'The amount of the income')
+    .option('-t, --tax <tax>', 'The tax amount')
+    .option('-s, --second-tax <secondTax>', 'The second tax amount')
+    .option('-T, --third-tax <thirdTax>', 'The third tax amount')
+    // .option('-l, --total <total>', 'The total amount')
+    .action(async (options) => {
+        const googleSheets = new GoogleSheets();
+        await googleSheets.addIncome({
+            date: options.date,
+            customerName: options.customer,
+            concept: options.concept,
+            invoice: options.invoice || '',
+            amount: parseFloat(options.amount) || 0,
+            taxAmount: parseFloat(options.tax) || 0,
+            secondTaxAmount: parseFloat(options.secondTax) || 0,
+            thirdTaxAmount: parseFloat(options.thirdTax) || 0,
+            total: parseFloat(options.amount || 0) + parseFloat(options.tax) + parseFloat(options.secondTax || 0) + parseFloat(options.thirdTax || 0),
+        });
+    });
 
 async function createSpreadsheet(title: string) {
     const auth = new JWT({
@@ -109,7 +135,7 @@ program
     .option('-s, --spreadsheet <spreadsheet>', 'The ID of the Google Sheet')
     .action(async (options) => {
         const email = options.email || DEFAULT_EMAIL;
-        const spreadsheet = options.spreadsheet || TEMPLATE_ID;
+        const spreadsheet = options.spreadsheet || SHEETS_ID;
         await shareSpreadsheet(spreadsheet, email);
     });
 
@@ -120,7 +146,7 @@ program
     .option('-s, --spreadsheet <spreadsheet>', 'The ID of the Google Sheet')
     .action(async (options) => {
         const folder = options.folder || FOLDER_ID;
-        const spreadsheet = options.spreadsheet || TEMPLATE_ID;
+        const spreadsheet = options.spreadsheet || SHEETS_ID;
         await updateSpreadsheetLocation(spreadsheet, folder);
     });
 
