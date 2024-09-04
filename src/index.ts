@@ -10,7 +10,7 @@ const program = new Command();
 
     program
     .command('add-income')
-    .description('Add income to Google Sheet')
+    .description('Add income to my spreadsheet')
     .option('-d, --date <date>', 'The date of the income')
     .option('-c, --customer <customer>', 'The customer name')
     .option('-o, --concept <concept>', 'The concept of the income')
@@ -32,6 +32,37 @@ const program = new Command();
             secondTaxAmount: parseFloat(options.secondTax) || 0,
             thirdTaxAmount: parseFloat(options.thirdTax) || 0,
             total: parseFloat(options.amount || 0) + parseFloat(options.tax) + parseFloat(options.secondTax || 0) + parseFloat(options.thirdTax || 0),
+        });
+    });
+
+    program
+    .command('add-expense')
+    .description('Add expense to my spreadsheet')
+    .option('-d, --date <date>', 'The date of the expense')
+    .option('-s, --supplier <supplier>', 'The supplier name')
+    .option('-e, --description <description>', 'The description of the expense')
+    .option('-r, --rfc <rfc>', 'The RFC of the supplier')
+    .option('-S, --sub-total <subTotal>', 'The sub-total amount')
+    .option('-t, --tax <tax>', 'The tax amount')
+    .option('-i, --ish <ish>', 'The ISH amount')
+    .option('-I, --isr-ret <isrRet>', 'The ISR retention amount')
+    .option('-v, --iva-ret <ivaRet>', 'The IVA retention amount')
+    .option('-l, --total <total>', 'The total amount')
+    .option('-m, --method <method>', 'The payment method')
+    .action(async (options) => {
+        const googleSheets = new GoogleSheets();
+        await googleSheets.addExpense({
+            date: options.date,
+            supplierName: options.supplier,
+            description: options.description || '',
+            rfc: options.rfc,
+            subTotal: parseFloat(options.subTotal) || 0,
+            taxAmount: parseFloat(options.tax) || 0,
+            ishAmount: parseFloat(options.ish) || 0,
+            isrRet: parseFloat(options.isrRet) || 0,
+            ivaRet: parseFloat(options.ivaRet) || 0,
+            total: parseFloat(options.subTotal || 0) + parseFloat(options.tax || 0) + parseFloat(options.ish || 0) - parseFloat(options.isrRet || 0) - parseFloat(options.ivaRet || 0),
+            paymentMethod: options.method || '',
         });
     });
 
