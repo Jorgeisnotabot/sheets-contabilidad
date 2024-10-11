@@ -1,4 +1,4 @@
-import { google, sheets_v4, drive_v3 } from 'googleapis';
+import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
 import { CLIENT_EMAIL, PRIVATE_KEY, SHEETS_ID } from '../config';
 import { Income, Expense } from './types';
