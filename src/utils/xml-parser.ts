@@ -1,119 +1,90 @@
 import { parseString } from 'xml2js';
-import fs from 'fs/promises';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-interface InvoiceData {
-    SubTotal: string;
-    Descuento: string;
-    Total: string;
-    TipoDeComprobante: string;
-    MetodoPago: string;
-    Moneda: string;
-    TipoCambio: string;
-    LugarExpedicion: string;
-    Exportacion: string;
-    Emisor: {
-      Rfc: string;
-      RegimenFiscal: string;
-      Nombre: string;
-    };
-    Receptor: {
-      Rfc: string;
-      UsoCFDI: string;
-      Nombre: string;
-      DomicilioFiscalReceptor: string;
-      RegimenFiscalReceptor: string;
-    };
-    Conceptos: {
-      Cantidad: string;
-      Descripcion: string;
-      NoIdentificacion: string;
-      Importe: string;
-      Unidad: string;
-      ValorUnitario: string;
-      ClaveProdServ: string;
-      ClaveUnidad: string;
-      Descuento: string;
-      ObjetoImp: string;
-    }[];
-    Impuestos: {
-      TotalImpuestosTrasladados: string;
-      Traslados: {
-        Base: string;
-        Impuesto: string;
-        TipoFactor: string;
-        TasaOCuota: string;
-        Importe: string;
-      }[];
-    };
-  }
+const projectRoot = path.resolve(__dirname, '..', '..');
+const inputDir = path.join(projectRoot, 'input');
+const outputDir = path.join(projectRoot, 'output');
 
-  async function parseCFDI(xmlString: string): Promise<InvoiceData> {
-    return new Promise((resolve, reject) => {
-      parseString(xmlString, { explicitArray: false }, (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          const cfdi = result['cfdi:Comprobante'];
-          const invoiceData: InvoiceData = {
-            SubTotal: cfdi.$.SubTotal,
-            Descuento: cfdi.$.Descuento,
-            Total: cfdi.$.Total,
-            TipoDeComprobante: cfdi.$.TipoDeComprobante,
-            MetodoPago: cfdi.$.MetodoPago,
-            Moneda: cfdi.$.Moneda,
-            TipoCambio: cfdi.$.TipoCambio,
-            LugarExpedicion: cfdi.$.LugarExpedicion,
-            Exportacion: cfdi.$.Exportacion,
-            Emisor: {
-              Rfc: cfdi['cfdi:Emisor'].$.Rfc,
-              RegimenFiscal: cfdi['cfdi:Emisor'].$.RegimenFiscal,
-              Nombre: cfdi['cfdi:Emisor'].$.Nombre,
-            },
-            Receptor: {
-              Rfc: cfdi['cfdi:Receptor'].$.Rfc,
-              UsoCFDI: cfdi['cfdi:Receptor'].$.UsoCFDI,
-              Nombre: cfdi['cfdi:Receptor'].$.Nombre,
-              DomicilioFiscalReceptor: cfdi['cfdi:Receptor'].$.DomicilioFiscalReceptor,
-              RegimenFiscalReceptor: cfdi['cfdi:Receptor'].$.RegimenFiscalReceptor,
-            },
-            Conceptos: cfdi['cfdi:Conceptos']['cfdi:Concepto'].map((concepto: any) => ({
-              Cantidad: concepto.$.Cantidad,
-              Descripcion: concepto.$.Descripcion,
-              NoIdentificacion: concepto.$.NoIdentificacion,
-              Importe: concepto.$.Importe,
-              Unidad: concepto.$.Unidad,
-              ValorUnitario: concepto.$.ValorUnitario,
-              ClaveProdServ: concepto.$.ClaveProdServ,
-              ClaveUnidad: concepto.$.ClaveUnidad,
-              Descuento: concepto.$.Descuento,
-              ObjetoImp: concepto.$.ObjetoImp,
-            })),
-            Impuestos: {
-              TotalImpuestosTrasladados: cfdi['cfdi:Impuestos'].$.TotalImpuestosTrasladados,
-              Traslados: cfdi['cfdi:Impuestos']['cfdi:Traslados']['cfdi:Traslado'].map((traslado: any) => ({
-                Base: traslado.$.Base,
-                Impuesto: traslado.$.Impuesto,
-                TipoFactor: traslado.$.TipoFactor,
-                TasaOCuota: traslado.$.TasaOCuota,
-                Importe: traslado.$.Importe,
-              })),
-            },
-          };
-          resolve(invoiceData);
-        }
-      });
-    });
-  }
-
-  async function main() {
-    try {
-      const xmlString = await fs.readFile('path/to/your/invoice.xml', 'utf-8');
-      const invoiceData = await parseCFDI(xmlString);
-      console.log(JSON.stringify(invoiceData, null, 2));
-    } catch (error) {
-      console.error('Error parsing CFDI:', error);
+export interface InvoiceData {
+  SubTotal: string;
+  Descuento: string;
+  Total: string;
+  MetodoPago?: string;
+  Emisor: {
+    Rfc: string;
+    RegimenFiscal: string;
+    Nombre: string;
+  },
+  Impuestos: {
+    TotalImpuestosTrasladados: string;
     }
-  }
-  
+    FechaTimbrado?: string;
+    Conceptos?: Array<{
+        Descripcion: string;
+    }>
+}
 
+async function parseCFDI(xmlString: string): Promise<InvoiceData> {
+  return new Promise((resolve, reject) => {
+    parseString(xmlString, { explicitArray: false }, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        const cfdi = result['cfdi:Comprobante'];
+        const invoiceData: InvoiceData = {
+          SubTotal: cfdi.$.SubTotal,
+            Descuento: cfdi.$.Descuento || '0',
+            Total: cfdi.$.Total,
+            MetodoPago: cfdi.$.MetodoPago,
+            Emisor: {
+                Rfc: cfdi['cfdi:Emisor'].$.Rfc,
+                RegimenFiscal: cfdi['cfdi:Emisor'].$.RegimenFiscal,
+                Nombre: cfdi['cfdi:Emisor'].$.Nombre,
+            },
+            Impuestos: {
+                TotalImpuestosTrasladados: cfdi['cfdi:Impuestos'].$.TotalImpuestosTrasladados,
+            },
+            FechaTimbrado: cfdi['cfdi:Complemento']['tfd:TimbreFiscalDigital'].$.FechaTimbrado,
+            Conceptos: Array.isArray(cfdi['cfdi:Conceptos']['cfdi:Concepto'])
+            ? cfdi['cfdi:Conceptos']['cfdi:Concepto']
+            : [cfdi['cfdi:Conceptos']['cfdi:Concepto']],
+        };
+        resolve(invoiceData);
+      }
+    });
+  });
+}
+
+export async function main() {
+    const allInvoiceData: InvoiceData[] = [];
+  try {
+    const files = await fs.readdir(inputDir);
+    const xmlFiles = files.filter((file) => file.endsWith('.xml'));
+
+    // Parse each XML file
+    for (const xmlFile of xmlFiles) {
+      try {
+        const xmlString = await fs.readFile(path.join(inputDir, xmlFile), 'utf-8');
+        const invoiceData = await parseCFDI(xmlString);
+        allInvoiceData.push(invoiceData);
+      } catch (error) {
+        console.error('Error parsing CFDI:', error);
+      }
+
+      
+     
+    }
+    console.log(JSON.stringify(allInvoiceData, null, 2));
+    return allInvoiceData;
+  } catch (error) {
+    console.error('Error reading input folder:', error);
+  }
+}
+
+// Call the main function to execute the script
+main();

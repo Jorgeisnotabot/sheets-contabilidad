@@ -5,8 +5,37 @@ import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
 import { CLIENT_EMAIL, PRIVATE_KEY, DEFAULT_EMAIL, FOLDER_ID, SHEETS_NAME, SHEETS_ID } from './config.js';
 import GoogleSheets from './lib/google-sheets.js';
+import { main, InvoiceData } from './utils/xml-parser.js';
 
 const program = new Command();
+
+    // Command to parse XML files and add the data to a Google Sheet
+    program
+    .command('invoice')
+    .description('Parse XML files and add the data to a Google Sheet')
+    .action(async () => {
+        const res = await main();
+        const invoiceData: InvoiceData[] = res || [];
+        const googleSheets = new GoogleSheets();
+
+        // Add each invoice to the Google Sheet
+        for (const data of invoiceData) {
+            await googleSheets.addIncome({
+                date: data.FechaTimbrado || '',
+                customerName: data.Emisor.Nombre || '',
+                concept: data.Conceptos?.[0]?.Descripcion || 'Venta', // Extract the first concept
+                invoice: data.Emisor.Rfc || '',
+                amount: parseFloat(data.SubTotal) || 0,
+                taxAmount: parseFloat(data.Impuestos.TotalImpuestosTrasladados) || 0,
+                secondTaxAmount: 0,
+                thirdTaxAmount: 0,
+                total: parseFloat(data.Total) || 0,
+            });
+        }
+       
+        
+    });
+
 
     program
     .command('add-income')
