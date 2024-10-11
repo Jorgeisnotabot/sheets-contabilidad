@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
-import { CLIENT_EMAIL, PRIVATE_KEY, SHEETS_ID } from '../config';
-import { Income, Expense } from './types';
+import { CLIENT_EMAIL, PRIVATE_KEY, SHEETS_ID } from '../config.js';
+import { Income, Expense } from './types.js';
 
 export default class GoogleSheets {
     private auth!: JWT;

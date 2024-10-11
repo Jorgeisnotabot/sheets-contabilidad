@@ -3,8 +3,8 @@
 import { Command } from 'commander';
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
-import { CLIENT_EMAIL, PRIVATE_KEY, DEFAULT_EMAIL, FOLDER_ID, SHEETS_NAME, SHEETS_ID } from './config';
-import GoogleSheets from './lib/google-sheets';
+import { CLIENT_EMAIL, PRIVATE_KEY, DEFAULT_EMAIL, FOLDER_ID, SHEETS_NAME, SHEETS_ID } from './config.js';
+import GoogleSheets from './lib/google-sheets.js';
 
 const program = new Command();
 
